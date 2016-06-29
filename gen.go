@@ -14,6 +14,7 @@ import (
 var (
 	rec_page string
 	httpFlag = flag.Bool("server", false, "Start debug server")
+	lintFlag = flag.String("lint", "", "Lint html chunk file")
 )
 
 func getTopicListItem(dir_path string) string {
@@ -126,12 +127,38 @@ func dirContents(dir_path string) string {
 	return contents
 }
 
+func lintFile(fname string) {
+	bytes, err := ioutil.ReadFile(fname)
+	if err != nil {
+		fmt.Println(fname, ": error: cannot open", err)
+		return
+	}
+	
+	changes := false
+
+	if bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF {
+		fmt.Println(fname, ": warn: BOM detected, removing")
+		bytes = bytes[3:]
+		changes = true
+	}
+
+	if changes {
+		err = ioutil.WriteFile(fname, bytes, 0666)
+		fmt.Println(fname, ": changed")
+	}
+}
+
 func main() {
 	flag.Parse()
 
 	if *httpFlag {
 		fmt.Println("starting server on http://localhost:9000")
 		panic(http.ListenAndServe(":9000", http.FileServer(http.Dir("gen"))))
+		return
+	}
+	
+	if *lintFlag != "" {
+		lintFile(*lintFlag)
 		return
 	}
 
