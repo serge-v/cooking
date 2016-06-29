@@ -73,11 +73,14 @@ func dirItems(dir_path string) string {
 		if strings.IndexAny(title, "<>") >= 0 {
 			panic(fmt.Sprintf("%s: error: invalid title. Should be in format <h3>Title</h3>.", fname))
 		}
-		
-		li := "<li><a href=\"" + dir_path + "#" + fi.Name() + "\">" + title  + "</li>\n"
+
+		tag := strings.Replace(fi.Name(), ".html", "", 1)
+		tag = strings.ToLower(tag)
+
+		li := "<li><a href=\"" + dir_path + "#" + tag + "\">" + title  + "</li>\n"
 		contents += li
 
-		items += "<a name=\"" + fi.Name() + "\"></a>"
+		items += "<a name=\"" + tag + "\"></a>"
 		items += string(chunk)
 		items = strings.Replace(items, "/recbook/images/", "/images/", -1)
 		items += page_break
