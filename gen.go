@@ -11,6 +11,10 @@ import (
 	"net/http"
 )
 
+const (
+	page_break = "\n<div class=\"page-break\"></div>"
+)
+
 var (
 	rec_page string
 	httpFlag = flag.Bool("server", false, "Start debug server")
@@ -73,8 +77,8 @@ func dirItems(dir_path string) string {
 
 		items += "<a name=\"" + fi.Name() + "\"></a>"
 		items += string(chunk)
-		items = strings.Replace(items, "/recbook/images/", "/images/", 1)
-		items += "\n<div class=\"page-break\"></div>"
+		items = strings.Replace(items, "/recbook/images/", "/images/", -1)
+		items += page_break
 	}
 	
 
