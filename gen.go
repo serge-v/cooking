@@ -7,10 +7,13 @@ import (
 	"io/ioutil"
 	"strings"
 	"bufio"
+	"flag"
+	"net/http"
 )
 
 var (
 	rec_page string
+	httpFlag = flag.Bool("server", false, "Start debug server")
 )
 
 func getTopicListItem(dir_path string) string {
@@ -60,8 +63,6 @@ func dirItems(dir_path string) string {
 		title, err := r.ReadString('\n')
 		title = strings.Replace(title, "<h3>", "", 1)
 		title = strings.Replace(title, "</h3>", "", 1)
-		title = strings.Replace(title, "<h4>", "", 1)
-		title = strings.Replace(title, "</h4>", "", 1)
 		if strings.IndexAny(title, "<>") >= 0 {
 			panic(fmt.Sprintf("%s: error: invalid title. Should be in format <h3>Title</h3>.", fname))
 		}
@@ -115,7 +116,6 @@ func dirContents(dir_path string) string {
 		if !fi.IsDir() {
 			continue
 		}
-		println(fi.Name())
 
 		subdir_path := dir_path + "/" + fi.Name()		
 		contents += dirContents(subdir_path)
@@ -127,6 +127,13 @@ func dirContents(dir_path string) string {
 }
 
 func main() {
+	flag.Parse()
+
+	if *httpFlag {
+		fmt.Println("starting server on http://localhost:9000")
+		panic(http.ListenAndServe(":9000", http.FileServer(http.Dir("gen"))))
+		return
+	}
 
 	text, err := ioutil.ReadFile("templates/main.html")
 	if err != nil {
