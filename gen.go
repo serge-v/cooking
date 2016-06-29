@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"fmt"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"bufio"
 	"flag"
 	"net/http"
+	"path/filepath"
 )
 
 const (
@@ -30,7 +32,7 @@ func getTopicListItem(dir_path string) string {
 		panic(err)
 	}
 	title := strings.Trim(string(bytes), " \r\n")
-	li := "<li><a href=\"" + dir_path + "/index.html\">" + title  + "</li>\n"
+	li := "<li><a href=\"" + dir_path + "\">" + title  + "</li>\n"
 	return li
 }
 
@@ -72,7 +74,7 @@ func dirItems(dir_path string) string {
 			panic(fmt.Sprintf("%s: error: invalid title. Should be in format <h3>Title</h3>.", fname))
 		}
 		
-		li := "<li><a href=\"" + dir_path + "/index.html#" + fi.Name() + "\">" + title  + "</li>\n"
+		li := "<li><a href=\"" + dir_path + "#" + fi.Name() + "\">" + title  + "</li>\n"
 		contents += li
 
 		items += "<a name=\"" + fi.Name() + "\"></a>"
@@ -141,14 +143,56 @@ func lintFile(fname string) {
 	changes := false
 
 	if bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF {
-		fmt.Println(fname, ": warn: BOM detected, removing")
+		fmt.Println(fname, ": warn: BOM")
 		bytes = bytes[3:]
 		changes = true
 	}
+	
+	r := bufio.NewReader(strings.NewReader(string(bytes)))
+	linenum := 0
+	for {
+		s, err := r.ReadString('\n')
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			panic(err)
+		}
+		linenum++
+		
+		pos := strings.IndexAny(s, "\r")
+		if pos >= 0 {
+			fmt.Printf("%s:%d: warn: invalid charachter at pos: %d\n", fname, linenum, pos)
+		}
+	}
 
 	if changes {
-		err = ioutil.WriteFile(fname, bytes, 0666)
+//		err = ioutil.WriteFile(fname, bytes, 0666)
 		fmt.Println(fname, ": changed")
+	}
+}
+
+func walk(path string, info os.FileInfo, err error) error {
+
+	if strings.HasSuffix(path, ".git") || strings.HasSuffix(path, "build") {
+		return filepath.SkipDir
+	}
+
+	if info.IsDir() {
+		return nil
+	}
+	
+	if strings.HasSuffix(path, ".html") {
+		lintFile(path)
+	}
+
+	return nil
+}
+
+func lintFiles(root string) {
+	err := filepath.Walk(root, walk)
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -162,7 +206,7 @@ func main() {
 	}
 	
 	if *lintFlag != "" {
-		lintFile(*lintFlag)
+		lintFiles(*lintFlag)
 		return
 	}
 
