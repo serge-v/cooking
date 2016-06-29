@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io"
+//	"io"
 	"os"
 	"fmt"
 	"log"
@@ -11,6 +11,7 @@ import (
 	"flag"
 	"net/http"
 	"path/filepath"
+//	"bytes"
 )
 
 const (
@@ -137,7 +138,7 @@ func dirContents(dir_path string) string {
 }
 
 func lintFile(fname string) {
-	bytes, err := ioutil.ReadFile(fname)
+	buf, err := ioutil.ReadFile(fname)
 	if err != nil {
 		fmt.Println(fname, ": error: cannot open", err)
 		return
@@ -145,15 +146,26 @@ func lintFile(fname string) {
 	
 	changes := false
 
-	if bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF {
+	if buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF {
 		fmt.Println(fname, ": warn: BOM")
-		bytes = bytes[3:]
+		buf = buf[3:]
 		changes = true
 	}
 	
-	r := bufio.NewReader(strings.NewReader(string(bytes)))
-	linenum := 0
-	for {
+//	r := bufio.NewReader(strings.NewReader(string(bytes)))
+//	linenum := 0
+//	has_crlf := false
+	
+	s := string(buf)
+	
+	pos := strings.Index(s, "\r\n")
+	if pos >= 0 {
+		fmt.Println(fname, ": warn: CRLF")
+		s = strings.Replace(s, "\r\n", "\n", -1)
+		changes = true
+	}
+
+/*	for {
 		s, err := r.ReadString('\n')
 		if err == io.EOF {
 			break
@@ -168,9 +180,9 @@ func lintFile(fname string) {
 			fmt.Printf("%s:%d: warn: invalid charachter at pos: %d\n", fname, linenum, pos)
 		}
 	}
-
+*/
 	if changes {
-//		err = ioutil.WriteFile(fname, bytes, 0666)
+		err = ioutil.WriteFile(fname, []byte(s), 0666)
 		fmt.Println(fname, ": changed")
 	}
 }
@@ -185,7 +197,7 @@ func walk(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 	
-	if strings.HasSuffix(path, ".html") {
+	if strings.HasSuffix(path, ".html") || strings.HasSuffix(path, "/title.txt") {
 		lintFile(path)
 	}
 
