@@ -45,7 +45,7 @@ func dirItems(dir_path string) string {
 		panic(err)
 	}
 
-	os.Mkdir("gen/" + dir_path, 0777)
+	os.Mkdir("build/" + dir_path, 0777)
 
 	contents := ""
 	items := ""
@@ -84,7 +84,7 @@ func dirItems(dir_path string) string {
 
 	text := strings.Replace(string(rec_page), "{contents}", items, 1)
 
-	err = ioutil.WriteFile("gen/" + dir_path + "/index.html", []byte(text), 0666)
+	err = ioutil.WriteFile("build/" + dir_path + "/index.html", []byte(text), 0666)
 	if err != nil {
 		panic(err)
 	}
@@ -114,7 +114,7 @@ func dirContents(dir_path string) string {
 
 	contents += "<ul>\n"
 	for _, fi := range(finfos) {
-		if fi.IsDir() && (fi.Name() == ".git" || fi.Name() == "images" || fi.Name() == "gen" || fi.Name() == "templates") {
+		if fi.IsDir() && (fi.Name() == ".git" || fi.Name() == "images" || fi.Name() == "build" || fi.Name() == "templates") {
 			continue
 		}
 		
@@ -157,7 +157,7 @@ func main() {
 
 	if *httpFlag {
 		fmt.Println("starting server on http://localhost:9000")
-		panic(http.ListenAndServe(":9000", http.FileServer(http.Dir("gen"))))
+		panic(http.ListenAndServe(":9000", http.FileServer(http.Dir("build"))))
 		return
 	}
 	
@@ -181,7 +181,7 @@ func main() {
 	contents := dirContents(".")
 
 	out := strings.Replace(string(main_page), "{contents}", contents, 1)
-	err = ioutil.WriteFile("gen/index.html", []byte(out), 0666)
+	err = ioutil.WriteFile("build/index.html", []byte(out), 0666)
 	if err != nil {
 		log.Fatal(err)
 	}

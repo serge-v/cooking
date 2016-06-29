@@ -7,10 +7,8 @@ website: generator
 	./generator
 
 compare:
-	[[ ! -d prod~ ]] && mkdir prod~
-	ncftpget -R -u voilokov -p `pass rsync/cooking` ftp.voilokov.com prod~/ '/public_html/cooking/'
-	diff prod~ gen
+	# TODO: copy from webdav
+	diff prod~ build
 
 deploy:
-	# need rename previous dir
-	# ncftpput -R -u voilokov -p `pass rsync/cooking` ftp.voilokov.com '/public_html/cooking/' gen/*
+	# TODO: copy tar, check hash, switch 
