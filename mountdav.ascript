@@ -1,5 +1,0 @@
-tell application "Finder"
-    try
-        mount volume "https://user@server.domain.tld/mountpoint"
-    end try
-end tell
