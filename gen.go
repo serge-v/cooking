@@ -1,17 +1,17 @@
 package main
 
 import (
-//	"io"
-	"os"
-	"fmt"
-	"log"
-	"io/ioutil"
-	"strings"
+	//	"io"
 	"bufio"
 	"flag"
+	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"path/filepath"
-//	"bytes"
+	"strings"
+	//	"bytes"
 )
 
 const (
@@ -33,7 +33,7 @@ func getTopicListItem(dir_path string) string {
 		panic(err)
 	}
 	title := strings.Trim(string(bytes), " \r\n")
-	li := "<li><a href=\"" + dir_path + "\">" + title  + "</li>\n"
+	li := "<li><a href=\"" + dir_path + "\">" + title + "</li>\n"
 	return li
 }
 
@@ -42,18 +42,18 @@ func dirItems(dir_path string) string {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	finfos, err := f.Readdir(100)
 	if err != nil {
 		panic(err)
 	}
 
-	os.Mkdir("build/" + dir_path, 0777)
+	os.Mkdir("build/"+dir_path, 0777)
 
 	contents := ""
 	items := ""
 
-	for _, fi := range(finfos) {
+	for _, fi := range finfos {
 		fname := dir_path + "/" + fi.Name()
 		println(fname)
 
@@ -65,7 +65,7 @@ func dirItems(dir_path string) string {
 		if err != nil {
 			panic(err)
 		}
-		
+
 		page := string(chunk)
 		r := bufio.NewReader(strings.NewReader(page))
 		title, err := r.ReadString('\n')
@@ -78,7 +78,7 @@ func dirItems(dir_path string) string {
 		tag := strings.Replace(fi.Name(), ".html", "", 1)
 		tag = strings.ToLower(tag)
 
-		li := "<li><a href=\"" + dir_path + "#" + tag + "\">" + title  + "</li>\n"
+		li := "<li><a href=\"" + dir_path + "#" + tag + "\">" + title + "</li>\n"
 		contents += li
 
 		items += "<a name=\"" + tag + "\"></a>"
@@ -86,15 +86,14 @@ func dirItems(dir_path string) string {
 		items = strings.Replace(items, "/recbook/images/", "/images/", -1)
 		items += page_break
 	}
-	
 
 	text := strings.Replace(string(rec_page), "{contents}", items, 1)
 
-	err = ioutil.WriteFile("build/" + dir_path + "/index.html", []byte(text), 0666)
+	err = ioutil.WriteFile("build/"+dir_path+"/index.html", []byte(text), 0666)
 	if err != nil {
 		panic(err)
 	}
-	
+
 	return contents
 }
 
@@ -106,7 +105,7 @@ func dirContents(dir_path string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	contents := getTopicListItem(dir_path)
 
 	finfos, err := f.Readdir(100)
@@ -119,19 +118,19 @@ func dirContents(dir_path string) string {
 	}
 
 	contents += "<ul>\n"
-	for _, fi := range(finfos) {
+	for _, fi := range finfos {
 		if fi.IsDir() && (fi.Name() == ".git" || fi.Name() == "images" || fi.Name() == "build" || fi.Name() == "templates") {
 			continue
 		}
-		
+
 		if !fi.IsDir() {
 			continue
 		}
 
-		subdir_path := dir_path + "/" + fi.Name()		
+		subdir_path := dir_path + "/" + fi.Name()
 		contents += dirContents(subdir_path)
 	}
-	
+
 	contents += dirItems(dir_path)
 	contents += "</ul>\n"
 	return contents
@@ -143,7 +142,7 @@ func lintFile(fname string) {
 		fmt.Println(fname, ": error: cannot open", err)
 		return
 	}
-	
+
 	changes := false
 
 	if buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF {
@@ -151,13 +150,13 @@ func lintFile(fname string) {
 		buf = buf[3:]
 		changes = true
 	}
-	
-//	r := bufio.NewReader(strings.NewReader(string(bytes)))
-//	linenum := 0
-//	has_crlf := false
-	
+
+	//	r := bufio.NewReader(strings.NewReader(string(bytes)))
+	//	linenum := 0
+	//	has_crlf := false
+
 	s := string(buf)
-	
+
 	pos := strings.Index(s, "\r\n")
 	if pos >= 0 {
 		fmt.Println(fname, ": warn: CRLF")
@@ -165,22 +164,22 @@ func lintFile(fname string) {
 		changes = true
 	}
 
-/*	for {
-		s, err := r.ReadString('\n')
-		if err == io.EOF {
-			break
+	/*	for {
+			s, err := r.ReadString('\n')
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				panic(err)
+			}
+			linenum++
+
+			pos := strings.IndexAny(s, "\r")
+			if pos >= 0 {
+				fmt.Printf("%s:%d: warn: invalid charachter at pos: %d\n", fname, linenum, pos)
+			}
 		}
-		if err != nil {
-			panic(err)
-		}
-		linenum++
-		
-		pos := strings.IndexAny(s, "\r")
-		if pos >= 0 {
-			fmt.Printf("%s:%d: warn: invalid charachter at pos: %d\n", fname, linenum, pos)
-		}
-	}
-*/
+	*/
 	if changes {
 		err = ioutil.WriteFile(fname, []byte(s), 0666)
 		fmt.Println(fname, ": changed")
@@ -196,7 +195,7 @@ func walk(path string, info os.FileInfo, err error) error {
 	if info.IsDir() {
 		return nil
 	}
-	
+
 	if strings.HasSuffix(path, ".html") || strings.HasSuffix(path, "/title.txt") {
 		lintFile(path)
 	}
@@ -219,7 +218,7 @@ func main() {
 		panic(http.ListenAndServe(":9000", http.FileServer(http.Dir("build"))))
 		return
 	}
-	
+
 	if *lintFlag != "" {
 		lintFiles(*lintFlag)
 		return
