@@ -10,35 +10,44 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	//	"bytes"
 )
 
 const (
-	page_break = "\n<div class=\"page-break\"></div>"
+	pageBreak = "\n<div class=\"page-break\"></div>"
 )
 
 var (
-	rec_page string
+	recPage  string
 	httpFlag = flag.Bool("server", false, "Start debug server")
 	lintFlag = flag.String("lint", "", "Lint html chunk file")
 )
 
-func getTopicListItem(dir_path string) string {
-	if dir_path == "." {
+func getTopicListItem(dirPath string) string {
+	if dirPath == "." {
 		return ""
 	}
-	bytes, err := ioutil.ReadFile(dir_path + "/title.txt")
+	bytes, err := ioutil.ReadFile(dirPath + "/title.txt")
 	if err != nil {
 		panic(err)
 	}
 	title := strings.Trim(string(bytes), " \r\n")
-	li := "<li><a href=\"" + dir_path + "\">" + title + "</li>\n"
+	li := "<li><a href=\"" + dirPath + "\">" + title + "</li>\n"
 	return li
 }
 
-func dirItems(dir_path string) string {
-	f, err := os.Open(dir_path)
+type byName []os.FileInfo
+
+func (f byName) Len() int      { return len(f) }
+func (f byName) Swap(i, j int) { f[i], f[j] = f[j], f[i] }
+func (f byName) Less(i, j int) bool {
+	return f[i].Name() < f[j].Name()
+}
+
+func dirItems(dirPath string) string {
+	f, err := os.Open(dirPath)
 	if err != nil {
 		panic(err)
 	}
@@ -48,13 +57,14 @@ func dirItems(dir_path string) string {
 		panic(err)
 	}
 
-	os.Mkdir("build/"+dir_path, 0777)
+	sort.Sort(byName(finfos))
+	os.Mkdir("build/"+dirPath, 0777)
 
 	contents := ""
 	items := ""
 
 	for _, fi := range finfos {
-		fname := dir_path + "/" + fi.Name()
+		fname := dirPath + "/" + fi.Name()
 		println(fname)
 
 		if !strings.HasSuffix(fname, ".html") {
@@ -78,18 +88,18 @@ func dirItems(dir_path string) string {
 		tag := strings.Replace(fi.Name(), ".html", "", 1)
 		tag = strings.ToLower(tag)
 
-		li := "<li><a href=\"" + dir_path + "#" + tag + "\">" + title + "</li>\n"
+		li := "<li><a href=\"" + dirPath + "#" + tag + "\">" + title + "</li>\n"
 		contents += li
 
 		items += "<a name=\"" + tag + "\"></a>"
 		items += string(chunk)
 		items = strings.Replace(items, "/recbook/images/", "/images/", -1)
-		items += page_break
+		items += pageBreak
 	}
 
-	text := strings.Replace(string(rec_page), "{contents}", items, 1)
+	text := strings.Replace(string(recPage), "{contents}", items, 1)
 
-	err = ioutil.WriteFile("build/"+dir_path+"/index.html", []byte(text), 0666)
+	err = ioutil.WriteFile("build/"+dirPath+"/index.html", []byte(text), 0666)
 	if err != nil {
 		panic(err)
 	}
@@ -97,21 +107,22 @@ func dirItems(dir_path string) string {
 	return contents
 }
 
-func dirContents(dir_path string) string {
+func dirContents(dirPath string) string {
 
-	println(dir_path)
+	println(dirPath)
 
-	f, err := os.Open(dir_path)
+	f, err := os.Open(dirPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	contents := getTopicListItem(dir_path)
+	contents := getTopicListItem(dirPath)
 
 	finfos, err := f.Readdir(100)
 	if err != nil {
 		log.Fatal(err)
 	}
+	sort.Sort(byName(finfos))
 
 	if len(finfos) == 0 {
 		return contents + "."
@@ -127,11 +138,11 @@ func dirContents(dir_path string) string {
 			continue
 		}
 
-		subdir_path := dir_path + "/" + fi.Name()
-		contents += dirContents(subdir_path)
+		subdirPath := dirPath + "/" + fi.Name()
+		contents += dirContents(subdirPath)
 	}
 
-	contents += dirItems(dir_path)
+	contents += dirItems(dirPath)
 	contents += "</ul>\n"
 	return contents
 }
@@ -216,7 +227,6 @@ func main() {
 	if *httpFlag {
 		fmt.Println("starting server on http://localhost:9000")
 		panic(http.ListenAndServe(":9000", http.FileServer(http.Dir("build"))))
-		return
 	}
 
 	if *lintFlag != "" {
@@ -228,17 +238,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	main_page := string(text)
+	mainPage := string(text)
 
 	text, err = ioutil.ReadFile("templates/recpage.html")
 	if err != nil {
 		log.Fatal(err)
 	}
-	rec_page = string(text)
+	recPage = string(text)
 
 	contents := dirContents(".")
 
-	out := strings.Replace(string(main_page), "{contents}", contents, 1)
+	out := strings.Replace(string(mainPage), "{contents}", contents, 1)
 	err = ioutil.WriteFile("build/index.html", []byte(out), 0666)
 	if err != nil {
 		log.Fatal(err)
