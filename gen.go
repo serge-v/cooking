@@ -226,7 +226,10 @@ func main() {
 
 	if *httpFlag {
 		fmt.Println("starting server on http://localhost:9000")
-		panic(http.ListenAndServe(":9000", http.FileServer(http.Dir("build"))))
+		http.Handle("/images/", http.FileServer(http.Dir(".")))
+		http.Handle("/", http.FileServer(http.Dir("build")))
+		panic(http.ListenAndServe(":9000", nil))
+		return
 	}
 
 	if *lintFlag != "" {
