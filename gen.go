@@ -1,13 +1,14 @@
 package main
 
+//go:generate go run server.go gen.go -gen
+
 import (
+	"os/exec"
 	//	"io"
 	"bufio"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -20,9 +21,7 @@ const (
 )
 
 var (
-	recPage  string
-	httpFlag = flag.Bool("server", false, "Start debug server")
-	lintFlag = flag.String("lint", "", "Lint html chunk file")
+	recPage string
 )
 
 func getTopicListItem(dirPath string) string {
@@ -99,6 +98,10 @@ func dirItems(dirPath string) string {
 
 	text := strings.Replace(string(recPage), "{contents}", items, 1)
 
+	_, err = os.Stat("build/" + dirPath)
+	if os.IsNotExist(err) {
+		os.MkdirAll("build/"+dirPath, 0755)
+	}
 	err = ioutil.WriteFile("build/"+dirPath+"/index.html", []byte(text), 0666)
 	if err != nil {
 		panic(err)
@@ -221,22 +224,7 @@ func lintFiles(root string) {
 	}
 }
 
-func main() {
-	flag.Parse()
-
-	if *httpFlag {
-		fmt.Println("starting server on http://localhost:9000")
-		http.Handle("/images/", http.FileServer(http.Dir(".")))
-		http.Handle("/", http.FileServer(http.Dir("build")))
-		panic(http.ListenAndServe(":9000", nil))
-		return
-	}
-
-	if *lintFlag != "" {
-		lintFiles(*lintFlag)
-		return
-	}
-
+func generateWebsite() {
 	text, err := ioutil.ReadFile("templates/main.html")
 	if err != nil {
 		log.Fatal(err)
@@ -256,4 +244,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	cmd := exec.Command("cp", "-R", "images", "build/")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		log.Fatalln(string(out), err)
+	}
+
+	os.Remove("cooking.zip")
+
+	cmd = exec.Command("zip", "-r", "../cooking.zip", ".")
+	cmd.Dir = "build"
+	if err = cmd.Run(); err != nil {
+		log.Fatal(err)
+	}
+	log.Println("zip created")
 }
