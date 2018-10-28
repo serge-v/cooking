@@ -15,9 +15,18 @@ var (
 	gen       = flag.Bool("gen", false, "generate website")
 	cgiServer = flag.Bool("cgi", false, "start debug cgi server")
 	lint      = flag.String("lint", "", "lint html chunk file")
+	version   = flag.Bool("version", false, "show version")
 )
 
+// Version is set by linker
+var Version string
+
 func runStandalone() {
+	if *version {
+		fmt.Println(Version)
+		return
+	}
+
 	if *lint != "" {
 		lintFiles(*lint)
 		return
@@ -45,7 +54,7 @@ func main() {
 		return
 	}
 
-	rc, err := zip.OpenReader("cooking.zip")
+	rc, err := zip.OpenReader("/usr/local/share/cooking.zip")
 	if err != nil {
 		panic(err)
 	}
