@@ -4,6 +4,7 @@ package main
 
 import (
 	"os/exec"
+	"regexp"
 	//	"io"
 	"bufio"
 	"fmt"
@@ -76,6 +77,15 @@ func dirItems(dirPath string) string {
 		}
 
 		page := string(chunk)
+		rex := regexp.MustCompile("<img src=[^>]+>")
+		img := rex.FindString(page)
+		if img != "" {
+			pic1 := strings.Replace(img, "<img src=", `<img class="pic1" src=`, 1)
+			pic2 := strings.Replace(img, "<img src=", `<img class="pic2" src=`, 1)
+			page = strings.Replace(page, "</h3>", "</h3>\n"+pic1, 1)
+			page = strings.Replace(page, img, pic2, 1)
+			//		log.Fatalf("fname: %s, img: %s, page: %s", fname, img, page)
+		}
 		r := bufio.NewReader(strings.NewReader(page))
 		title, err := r.ReadString('\n')
 		title = strings.Replace(title, "<h3>", "", 1)
@@ -91,7 +101,7 @@ func dirItems(dirPath string) string {
 		contents += li
 
 		items += "<a name=\"" + tag + "\"></a>"
-		items += string(chunk)
+		items += page
 		items = strings.Replace(items, "/recbook/images/", "/images/", -1)
 		items += pageBreak
 	}
