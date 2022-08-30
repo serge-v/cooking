@@ -1,10 +1,11 @@
 package main
 
-//go:generate go run server.go gen.go -gen
+//go:generate go run main.go gen.go -gen
 
 import (
 	"os/exec"
 	"regexp"
+
 	//	"io"
 	"bufio"
 	"fmt"
