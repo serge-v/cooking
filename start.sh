@@ -1,5 +1,6 @@
 ssh my <<EOF
     docker kill cooking
+    docker rm cooking
     docker image rm localhost/cooking
 EOF
 
