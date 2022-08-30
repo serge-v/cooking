@@ -1,11 +1,10 @@
 .PHONY: build
 
 build:
+	go generate
 	GOARCH=amd64 GOOS=linux go build -o cooking.linux
-
-deploy:
-	ppodman build . -t cooking
-	podman save cooking | gzip | ssh my 'gunzip | docker load'
+	podman build . -t cooking
+	podman save cooking > cooking.img
 
 debug:
 	go build
