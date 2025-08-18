@@ -2,7 +2,7 @@
 
 build:
 	go generate
-	GOARCH=amd64 GOOS=linux go build -o cooking.linux
+	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o cooking.linux
 	podman build . -t cooking
 	podman save cooking > cooking.img
 
