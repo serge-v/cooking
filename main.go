@@ -36,6 +36,6 @@ func main() {
 	defer rc.Close()
 
 	fs := httpfs.New(zipfs.New(rc, "cooking"))
-	log.Println("listening on", *addr)
+	log.Println("listening on", "http://"+*addr)
 	log.Fatal(http.ListenAndServe(*addr, http.FileServer(fs)))
 }
