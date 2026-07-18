@@ -256,14 +256,14 @@ func generateWebsite() {
 		log.Fatal(err)
 	}
 
-	cmd := exec.Command("cp", "-R", "images", "build/")
+	cmd := exec.Command("cp", "-x", "cooking.zip", "-R", "images", "build/")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		log.Fatalln(string(out), err)
 	}
 
 	os.Remove("cooking.zip")
 
-	cmd = exec.Command("zip", "-r", "../cooking.zip", ".")
+	cmd = exec.Command("zip", "-r", "cooking.zip", ".")
 	cmd.Dir = "build"
 	if err = cmd.Run(); err != nil {
 		log.Fatal(err)
