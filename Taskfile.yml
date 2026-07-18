@@ -7,13 +7,13 @@ vars:
 
 tasks:
   start-image-local:
-    desc: Start cooking locally
+    desc: Start {{.APP}} locally
     preconditions:
       - sh: podman network exists {{.APP}}-net
         msg: "Create podman network using: podman network create {{.APP}}-net"
     cmds:
       - CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o build/{{.APP}}.linux
-      - podman build . -t {{.APP}}
+      - podman build --build-arg APP_NAME={{.APP}} -t {{.APP}} .
       - podman run --name {{.APP}} -d --memory 256m --cpus 1.0 --replace --network {{.APP}}-net localhost/{{.APP}}
       - podman network disconnect {{.APP}}-net proxy
       - podman network connect {{.APP}}-net proxy
