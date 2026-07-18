@@ -20,4 +20,4 @@ tasks:
 
   connect-local:
     cmds:
-      - podman exec -it proxy /bin/busybox /bin/sh
+      - podman exec -it {{.APP}} /bin/busybox /bin/sh
