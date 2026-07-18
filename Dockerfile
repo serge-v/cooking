@@ -6,4 +6,4 @@ COPY build/cooking.zip /home/cooking/
 RUN chown -R cooking:cooking /home/cooking/
 USER cooking
 CMD ["cooking"]
-EXPOSE 80
+EXPOSE 8080
