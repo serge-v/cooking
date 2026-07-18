@@ -15,7 +15,7 @@ tasks:
       - CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o build/{{.APP}}.linux
       - podman build --build-arg APP_NAME={{.APP}} -t {{.APP}} .
       - podman run --name {{.APP}} -d --memory 256m --cpus 1.0 --replace --network {{.APP}}-net localhost/{{.APP}}
-      - podman network disconnect {{.APP}}-net proxy
+      - podman network disconnect {{.APP}}-net proxy | true
       - podman network connect {{.APP}}-net proxy
 
   connect-local:
