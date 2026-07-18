@@ -2,13 +2,13 @@
 
 build:
 	go generate
-	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o cooking.linux
+	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o build/cooking.linux
 	podman build . -t cooking
-	podman save cooking > cooking.img
+	podman save cooking > build/cooking.img
 
 debug:
-	go build
-	./cooking -addr localhost:8093
+	go build -o build/cooking
+	build/cooking -addr localhost:8093
 
 run-local:
 	podman \
