@@ -13,7 +13,7 @@ import (
 var (
 	gen  = flag.Bool("gen", false, "generate website")
 	lint = flag.String("lint", "", "lint html chunk file")
-	addr = flag.String("addr", ":80", "address to listen")
+	addr = flag.String("addr", ":8080", "address to listen")
 )
 
 func main() {
