@@ -3,7 +3,7 @@
 build:
 	go generate
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o build/cooking.linux
-	podman build . -t cooking
+	podman build --build-arg APP_NAME=cooking -t cooking .
 	podman save cooking > build/cooking.img
 
 debug:

@@ -18,6 +18,7 @@ var (
 
 func main() {
 	flag.Parse()
+	log.SetFlags(log.Lshortfile)
 
 	if *lint != "" {
 		lintFiles(*lint)

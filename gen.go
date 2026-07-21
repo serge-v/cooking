@@ -59,7 +59,7 @@ func dirItems(dirPath string) string {
 	}
 
 	sort.Sort(byName(finfos))
-	os.Mkdir("build/"+dirPath, 0777)
+	os.MkdirAll("build/zip/"+dirPath, 0755)
 
 	contents := ""
 	items := ""
@@ -109,11 +109,11 @@ func dirItems(dirPath string) string {
 
 	text := strings.Replace(string(recPage), "{contents}", items, 1)
 
-	_, err = os.Stat("build/" + dirPath)
+	_, err = os.Stat("build/zip/" + dirPath)
 	if os.IsNotExist(err) {
-		os.MkdirAll("build/"+dirPath, 0755)
+		os.MkdirAll("build/zip/"+dirPath, 0755)
 	}
-	err = ioutil.WriteFile("build/"+dirPath+"/index.html", []byte(text), 0666)
+	err = ioutil.WriteFile("build/zip/"+dirPath+"/index.html", []byte(text), 0666)
 	if err != nil {
 		panic(err)
 	}
@@ -251,20 +251,24 @@ func generateWebsite() {
 	contents := dirContents(".")
 
 	out := strings.Replace(string(mainPage), "{contents}", contents, 1)
-	err = ioutil.WriteFile("build/index.html", []byte(out), 0666)
+	err = ioutil.WriteFile("build/zip/index.html", []byte(out), 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	cmd := exec.Command("cp", "-x", "cooking.zip", "-R", "images", "build/")
+	if err := os.MkdirAll("build/zip/", 0755); err != nil {
+		log.Fatal(err)
+	}
+
+	cmd := exec.Command("cp", "-R", "images", "build/zip/")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		log.Fatalln(string(out), err)
 	}
 
-	os.Remove("cooking.zip")
+	os.Remove("build/cooking.zip")
 
-	cmd = exec.Command("zip", "-r", "cooking.zip", ".")
-	cmd.Dir = "build"
+	cmd = exec.Command("zip", "-r", "../cooking.zip", ".")
+	cmd.Dir = "build/zip/"
 	if err = cmd.Run(); err != nil {
 		log.Fatal(err)
 	}

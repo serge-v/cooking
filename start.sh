@@ -3,19 +3,23 @@
 HOST=podmanuser@my2
 
 ssh ${HOST} <<EOF
-    docker kill cooking
-    docker rm cooking
-    docker image rm localhost/cooking
+    podman kill cooking
+    podman rm cooking
+    podman image rm localhost/cooking
 EOF
 
-gzip -c cooking.img | ssh ${HOST} 'gunzip | docker load'
+gzip -c build/cooking.img | ssh ${HOST} 'gunzip | podman load'
 
 ssh ${HOST} <<EOF
-    docker run \
-    --network proxy \
-    -p 8080:80 \
-    --detach \
-    --name cooking \
-    --restart always \
-    localhost/cooking
+	podman network exists cooking-net || podman network create cooking-net
+
+	docker run \
+		--network cooking-net \
+		--detach \
+		--name cooking \
+		--restart always \
+		localhost/cooking
+		
+	podman network disconnect cooking-net proxy || true
+	podman network connect cooking-net proxy
 EOF
