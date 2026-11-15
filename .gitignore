@@ -1,3 +1,4 @@
 build/
 *.geany
 list.txt
+*~.*
